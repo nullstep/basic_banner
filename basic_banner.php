@@ -247,7 +247,7 @@ class _bbMenu {
 			$this->slug,
 			[$this, 'render_admin'],
 			'data:image/svg+xml;base64,' . base64_encode(
-				'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500px" height="500px" viewbox="0 0 500 500"><path fill="#a7aaad" d="M250,8.74L41.06,129.37v241.26L250,491.26l208.94-120.63V129.37L250,8.74z M124.93,315.85h88.26v17.19h-88.26 V315.85z M248.64,368.49H89.49v-123.7h17.19V351.3h124.77v-53.88H124.93v-52.64h17.19v35.44h106.51V368.49z M285.8,206.19h88.26 v17.19H285.8V206.19z M409.5,258.82H250.35v-123.7h17.19v106.51h124.77v-53.88H285.8v-52.64h17.19v35.44H409.5V258.82z"/></svg>'
+				'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500px" height="500px" viewbox="0 0 500 500"><g><polygon fill="#a7aaad" points="205,355.6 205,265.7 99.7,265.7 99.7,294.7 99.7,335.4 205,396.3"/><polygon fill="#a7aaad" points="400.3,204 400.3,163.3 295,102.5 295,143.2 295,234.3 400.3,234.3"/><polygon fill="#a7aaad" points="205,143.2 205,102.5 99.7,163.3 99.7,204 99.7,234.3 205,234.3"/><path fill="#a7aaad" d="M250,8.7L41.1,129.4v241.3L250,491.3l208.9-120.6V129.4L250,8.7z M236.4,452L68.2,354.9V145.1L236.4,48V452z M431.8,354.9L263.6,452V48l168.2,97.1V354.9z"/><polygon fill="#a7aaad" points="400.3,294.7 400.3,265.7 295,265.7 295,355.6 295,396.3 400.3,335.4"/></g></svg>'
 			),
 			30
 		);
@@ -976,7 +976,7 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 			echo '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
 			echo '<img src="' . $items[$i]['image'] . '" class="d-block w-100" alt="...">';
 			echo '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
-			echo '<h2 class="banner-title">' . $items[$i]['title'] . '</h2>';
+			echo '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
 			echo '<p class="banner-text">' . $items[$i]['text'] . '</p>';
 			if ($items[$i]['button']) {
 				echo '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
