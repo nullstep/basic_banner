@@ -823,7 +823,7 @@ function bb_banner_edit_form_fields($term) {
 //    ███         █▀    █████▄▄██     ▄████▀      ██████████    ███    ███  
 
 function bb_add_filter_to_slides_list() {
-	$type = (isset($_GET['post_type'])) ?: 'post';
+	$type = (isset($_GET['post_type'])) ? $_GET['post_type'] : 'post';
 
 	if ($type == 'slide') {
 		$banners = get_terms([
@@ -852,7 +852,7 @@ function bb_add_filter_to_slides_list() {
 
 function bb_slides_filter($query) {
 	global $pagenow;
-	$type = (isset($_GET['post_type'])) ?: 'post';
+	$type = (isset($_GET['post_type'])) ? $_GET['post_type'] : 'post';
 
 	if (is_admin() && $type == 'slide' && $pagenow == 'edit.php') {
 		if (isset($_GET['banner_name']) && $_GET['banner_name'] != '') {
