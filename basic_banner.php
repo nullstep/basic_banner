@@ -1277,7 +1277,7 @@ function bb_admin_styling() {
 // caller function
 
 function basic_banner($banner) {
-	echo do_shortcode('[basic_banner]' . $banner . '[/basic_banner]');
+	echo do_shortcode('[banner]' . $banner . '[/banner]');
 }
 
 //     ▄██████▄    ▄██████▄ 
@@ -1317,7 +1317,7 @@ add_filter('get_next_post_sort', 'bb_get_next_post_sort');
 
 // shortcodes
 
-add_shortcode('basic_banner', 'bb_shortcode');
+add_shortcode('banner', 'bb_shortcode');
 
 // boot plugin
 
