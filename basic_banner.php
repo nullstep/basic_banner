@@ -2,11 +2,11 @@
 
 /*
  * Plugin Name: basic_banner
- * Plugin URI: https://xayrin.com/plugins
+ * Plugin URI: https://localhost/plugins
  * Description: A simple banner/slider
  * Author: Scott A. Dixon
- * Author URI: https://xayrin.com
- * Version: 1.0.0
+ * Author URI: https://localhost
+ * Version: 1.0.1
  */
 
 defined('ABSPATH') or die('⎺\_(ツ)_/⎺');
