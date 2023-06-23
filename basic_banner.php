@@ -517,9 +517,10 @@ function bb_add_metaboxes() {
 }
 
 function bb_slide_metabox($post) {
+	wp_enqueue_media();
 	$prefix = '_bb-slide_';
 	$keys = [
-		'pid',
+		'media',
 		'align',
 		'top',
 		'text',
@@ -547,6 +548,22 @@ function bb_slide_metabox($post) {
 			padding: 3px;
 			vertical-align: middle;
 			margin-top: 10px;
+		}
+		#bb_meta_box .group {
+			display: inline-block;
+			width: 53%;
+		}
+		#bb_meta_box .group input {
+			display: inline-block;
+			width: 90%;
+		}
+		#bb_meta_box .group input.choose-file-button {
+			display: inline-block;
+			position: relative;
+			width: 8%;
+			height: 34px;
+			top: 0px;
+			left: 2px;
 		}
 		#bb_meta_box span.desc {
 			display: block;
@@ -583,39 +600,21 @@ function bb_slide_metabox($post) {
 	</style>
 	<div class="inside">
 		<div class="top">
-			<label>Image:</label>
-			<input type="hidden" id="bb-slide-pid" name="_bb-slide_pid" value="<?php echo $pid; ?>">
-			<select id="bb-images">
-				<option value="">Select Image...</option>
+			<label>Media:</label>
 <?php
-	$query = new WP_Query([
-		'post_type' => 'attachment',
-		'post_status' => 'inherit',
-		'posts_per_page' => -1,
-	]);
-
-	$images = [];
-
-	if (count($query->posts) > 0) {
-		$selected = '';
+	if ($media != '') {
+		$img = '/uploads/' . $media;
+	}
+	else {
 		$img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAAAARSURBVDhPYxgFo2AUQAEDAwADEAABuGyTOQAAAABJRU5ErkJggg==';
-		foreach ($query->posts as $image) {
-			$id = $image->ID;
-			$image_url = wp_get_attachment_url($image->ID);
-			if ($id == $pid) {
-				$selected = ' selected';
-				$img = $image_url;
-			}
-			else {
-				$selected = '';
-			}
-			echo '<option data-url="' . $image_url . '" value="' . $id . '"' . $selected . '>' . $image->post_title . '</option>';
-		}
 	}
 ?>
-			</select>
+			<div class="group">
+				<input type="text" id="bb-slide-media" name="_bb-slide_media" value="<?php echo $media; ?>">
+				<input data-id="bb-slide-media" type="button" class="button-primary choose-file-button" value="...">
+			</div>
 			<span class="preview"><img id="bb-preview" src="<?php echo $img; ?>" style="height:64px"></span>
-			<span class="desc">Choose an image to use for this slide from the dropdown</span>
+			<span class="desc">Media (image/video) for this slide</span>
 		</div>
 		<div class="middle">
 			<label>Align:</label>
@@ -653,11 +652,35 @@ function bb_slide_metabox($post) {
 	</div>
 	<script>
 		jQuery(document).ready(function($) {
-			var select = $('#bb-images');
-			var pid = $('#bb-slide-pid');
-			select.on('change', function() {
-				pid.val($(this).val());
-				$('#bb-preview').attr('src', $(this).find('option:selected').data('url'));
+			var m = $('#bb-slide-media');
+			m.on('change', function() {
+				$('#bb-preview').attr('src', '/uploads/' + m.val());
+			});
+			var mediaUploader, bid;
+			$('.choose-file-button').on('click', function(e) {
+				bid = '#' + $(this).data('id');
+				e.preventDefault();
+				if (mediaUploader) {
+					mediaUploader.open();
+					return;
+				}
+				mediaUploader = wp.media.frames.file_frame = wp.media({
+					title: 'Choose File',
+					button: {
+						text: 'Choose File'
+					}, multiple: false
+				});
+				wp.media.frame.on('open', function() {
+					if (wp.media.frame.content.get() !== null) {          
+						wp.media.frame.content.get().collection._requery(true);
+						wp.media.frame.content.get().options.selection.reset();
+					}
+				}, this);
+				mediaUploader.on('select', function() {
+					var attachment = mediaUploader.state().get('selection').first().toJSON();
+					$(bid).val(attachment.url.split('/').pop()).trigger('change');
+				});
+				mediaUploader.open();
 			});
 		});
 	</script>
@@ -667,7 +690,7 @@ function bb_slide_metabox($post) {
 function bb_save_postdata($post_id) {
 	$prefix = '_bb-slide_';
 	$keys = [
-		'pid',
+		'media',
 		'align',
 		'top',
 		'text',
@@ -947,11 +970,9 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 		
 		if ($banner->have_posts()) {
 			while ($banner->have_posts()) : $banner->the_post();
-				$pid = get_post_meta(get_the_ID(), '_bb-slide_pid', true);
 				$items[] = [
 					'title' => get_the_title(),
-					'pid' => $pid,
-					'image' => wp_get_attachment_url($pid),
+					'image' => '/uploads/' . get_post_meta(get_the_ID(), '_bb-slide_media', true),
 					'align' => get_post_meta(get_the_ID(), '_bb-slide_align', true),
 					'top' => get_post_meta(get_the_ID(), '_bb-slide_top', true),
 					'text' => get_post_meta(get_the_ID(), '_bb-slide_text', true),
@@ -981,7 +1002,7 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 		$class .= ($mode == 'dark') ? ' carousel-dark' : '';
 		$style = ($accent == 'yes') ? ';border-bottom:5px solid transparent"' : '';
 
-		echo str_repeat("\t", _BB['bb_indent']) . '<div id="' . $id . '" class="carousel slide' . $class . '" data-bs-ride="carousel" style="overflow:hidden;height:' . $height . $style . '">';
+		echo str_repeat("\t", _BB['bb_indent']) . '<div id="' . $id . '" class="carousel slide' . $class . '" data-bs-ride="carousel" style="overflow:hidden;max-height:' . $height . $style . '">';
 		if ($indicators == 'yes') {
 			echo '<div class="carousel-indicators">';
 			for ($i = 0; $i < count($items); $i++) {
@@ -995,7 +1016,7 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 		for ($i = 0; $i < count($items); $i++) {
 			$class = ($i == 0) ? ' active' : '';
 			echo '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
-			echo '<img src="' . $items[$i]['image'] . '" class="d-block h-100" alt="...">';
+			echo '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
 			echo '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
 			echo '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
 			echo '<p class="banner-text">' . $items[$i]['text'] . '</p>';
