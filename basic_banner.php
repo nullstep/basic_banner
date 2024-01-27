@@ -1339,12 +1339,14 @@ add_action('wp_ajax_update-custom-type-order-archive', 'bb_save_archive_ajax_ord
 
 // filters
 
-add_filter('parent_file', 'bb_set_current_menu');
-add_filter('parse_query', 'bb_slides_filter');
-add_filter('get_previous_post_where', 'bb_get_previous_post_where', 99, 3);
-add_filter('get_previous_post_sort', 'bb_get_previous_post_sort');
-add_filter('get_next_post_where', 'bb_get_next_post_where', 99, 3);
-add_filter('get_next_post_sort', 'bb_get_next_post_sort');
+if (is_admin()) {
+	add_filter('parent_file', 'bb_set_current_menu');
+	add_filter('parse_query', 'bb_slides_filter');
+	add_filter('get_previous_post_where', 'bb_get_previous_post_where', 99, 3);
+	add_filter('get_previous_post_sort', 'bb_get_previous_post_sort');
+	add_filter('get_next_post_where', 'bb_get_next_post_where', 99, 3);
+	add_filter('get_next_post_sort', 'bb_get_next_post_sort');
+}
 
 // shortcodes
 
