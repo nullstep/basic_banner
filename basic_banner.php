@@ -252,6 +252,16 @@ class _bbMenu {
 			30
 		);
 
+		// add config submenu
+
+		add_submenu_page(
+			$this->slug,
+			'Configuration',
+			'Configuration',
+			'manage_options',
+			$this->slug
+		);
+
 		// add taxonomies menus
 
 		$types = [
@@ -261,8 +271,8 @@ class _bbMenu {
 		foreach ($types as $type => $child) {
 			add_submenu_page(
 				$this->slug,
-				$type . 's',
-				$type . 's',
+				ucwords($type . 's'),
+				ucwords($type . 's'),
 				'manage_options',
 				'/edit-tags.php?taxonomy=' . $type . '&post_type=' . $child
 			);
@@ -277,8 +287,8 @@ class _bbMenu {
 		foreach ($types as $type) {
 			add_submenu_page(
 				$this->slug,
-				$type . 's',
-				$type . 's',
+				ucwords($type . 's'),
+				ucwords($type . 's'),
 				'manage_options',
 				'/edit.php?post_type=' . $type
 			);
