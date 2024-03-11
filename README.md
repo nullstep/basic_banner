@@ -3,7 +3,7 @@ simple banner plugin for WP
 
 call via shortcode:
 
-[basic_banner]BANNER-NAME[/basic_banner]
+[banner]BANNER-NAME[/banner]
 
 call via function:
 
