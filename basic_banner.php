@@ -2,11 +2,11 @@
 
 /*
  * Plugin Name: basic_banner
- * Plugin URI: https://localhost/plugins
+ * Plugin URI: https://nullstep.com/wp-plugins
  * Description: A simple banner/slider
- * Author: Scott A. Dixon
- * Author URI: https://localhost
- * Version: 1.0.1
+ * Author: nullstep
+ * Author URI: https://nullstep.com
+ * Version: 1.2.1
  */
 
 defined('ABSPATH') or die('⎺\_(ツ)_/⎺');
@@ -247,9 +247,9 @@ class _bbMenu {
 			$this->slug,
 			[$this, 'render_admin'],
 			'data:image/svg+xml;base64,' . base64_encode(
-				'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500px" height="500px" viewbox="0 0 500 500"><g><polygon fill="#a7aaad" points="376.38,215.55 376.38,185.08 297.53,139.55 297.53,170.02 297.53,232.25 376.38,232.25"/><polygon fill="#a7aaad" points="376.38,283.47 376.38,267.75 297.53,267.75 297.53,329.08 297.53,359.55 376.38,313.95"/><polygon fill="#a7aaad" points="202.52,329.08 202.52,267.75 123.67,267.75 123.67,283.47 123.67,313.95 202.52,359.55"/><polygon fill="#a7aaad" points="202.52,170.02 202.52,139.55 123.67,185.08 123.67,215.55 123.67,232.25 202.52,232.25"/><path fill="#a7aaad" d="M250,9.8L42,129.9v240.2l208,120.1l208-120.1V129.9L250,9.8z M237.89,429.85L88.13,343.4V156.6l149.76-86.45 V429.85z M411.87,343.4l-149.76,86.45V70.15l149.76,86.45V343.4z"/></g></svg>'
+				'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500px" height="500px" viewbox="0 0 500 500"><path fill="#a7aaad" d="M250,9.8L42,129.9v240.2l208,120.1l208-120.1V129.9L250,9.8z M381.5,140v35.5V228v44v52.5V360v8.5h-263V360 v-35.5V272v-44v-52.5V140v-8.5h263V140z"/></svg>'
 			),
-			30
+			3
 		);
 
 		// add config submenu
@@ -750,12 +750,12 @@ function bb_banner_edit_form_fields($term) {
 		$accent = 'yes';
 	}
 	else {
-		$height = get_term_meta($term->term_id, 'height', TRUE);
-		$interval = get_term_meta($term->term_id, 'interval', TRUE);
-		$mode = get_term_meta($term->term_id, 'mode', TRUE);
-		$crossfade = get_term_meta($term->term_id, 'crossfade', TRUE);
-		$indicators = get_term_meta($term->term_id, 'indicators', TRUE);
-		$accent = get_term_meta($term->term_id, 'accent', TRUE);
+		$height = get_term_meta($term->term_id, 'height', true);
+		$interval = get_term_meta($term->term_id, 'interval', true);
+		$mode = get_term_meta($term->term_id, 'mode', true);
+		$crossfade = get_term_meta($term->term_id, 'crossfade', true);
+		$indicators = get_term_meta($term->term_id, 'indicators', true);
+		$accent = get_term_meta($term->term_id, 'accent', true);
 	}
 ?>
 	<tr class="form-field">
@@ -861,7 +861,7 @@ function bb_add_filter_to_slides_list() {
 	if ($type == 'slide') {
 		$banners = get_terms([
 			'taxonomy' => 'banner',
-			'hide_empty' => FALSE,
+			'hide_empty' => false,
 		]);
 
 		echo '<select name="banner_name">';
@@ -994,14 +994,16 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 	}
 
 	$term = get_term_by('slug', $name, 'banner');
-	$height = get_term_meta($term->term_id, 'height', TRUE);
-	$interval = get_term_meta($term->term_id, 'interval', TRUE);
-	$mode = get_term_meta($term->term_id, 'mode', TRUE);
-	$crossfade = get_term_meta($term->term_id, 'crossfade', TRUE);
-	$indicators = get_term_meta($term->term_id, 'indicators', TRUE);
-	$accent = get_term_meta($term->term_id, 'accent', TRUE);
+	$height = get_term_meta($term->term_id, 'height', true);
+	$interval = get_term_meta($term->term_id, 'interval', true);
+	$mode = get_term_meta($term->term_id, 'mode', true);
+	$crossfade = get_term_meta($term->term_id, 'crossfade', true);
+	$indicators = get_term_meta($term->term_id, 'indicators', true);
+	$accent = get_term_meta($term->term_id, 'accent', true);
 
-	if (count($items) > 0) {
+	$num_items = count($items);
+
+	if ($num_items > 0) {
 		ob_start();
 
 		echo str_repeat("\t", _BB['bb_indent']) . '<style>' . _BB['bb_css_minified'] . '</style>' . "\n";
@@ -1013,39 +1015,49 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 		$style = ($accent == 'yes') ? ';border-bottom:5px solid transparent"' : '';
 
 		echo str_repeat("\t", _BB['bb_indent']) . '<div id="' . $id . '" class="carousel slide' . $class . '" data-bs-ride="carousel" style="overflow:hidden;max-height:' . $height . $style . '">';
-		if ($indicators == 'yes') {
+
+		if (($indicators == 'yes') && ($num_items > 1)) {
 			echo '<div class="carousel-indicators">';
+
 			for ($i = 0; $i < count($items); $i++) {
 				$class = ($i == 0) ? 'active' : '';
 				echo '<button type="button" data-bs-target="#' . $id . '" data-bs-slide-to="' . $i . '" class="' . $class . '" aria-current="true" aria-label="Slide ' . ($i + 1) . '"></button>';
 			}
+
 			echo '</div>';			
 		}
+
 		echo '<div class="carousel-inner">';
 
 		for ($i = 0; $i < count($items); $i++) {
 			$class = ($i == 0) ? ' active' : '';
 			echo '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
-			echo '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
-			echo '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
-			echo '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
-			echo '<p class="banner-text">' . $items[$i]['text'] . '</p>';
-			if ($items[$i]['button']) {
-				echo '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
-			}
-			echo '</div>';
+				echo '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
+				echo '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
+					echo '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
+					echo '<p class="banner-text">' . $items[$i]['text'] . '</p>';
+
+					if ($items[$i]['button']) {
+						echo '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
+					}
+
+				echo '</div>';
 			echo '</div>';
 		}
 
 		echo '</div>';
-		echo '<button class="carousel-control-prev" type="button" data-bs-target="#' . $id . '" data-bs-slide="prev">';
-		echo '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
-		echo '<span class="visually-hidden">Previous</span>';
-		echo '</button>';
-		echo '<button class="carousel-control-next" type="button" data-bs-target="#' . $id . '" data-bs-slide="next">';
-		echo '<span class="carousel-control-next-icon" aria-hidden="true"></span>';
-		echo '<span class="visually-hidden">Next</span>';
-		echo '</button>';
+
+		if ($num_items > 1) {
+			echo '<button class="carousel-control-prev" type="button" data-bs-target="#' . $id . '" data-bs-slide="prev">';
+				echo '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
+				echo '<span class="visually-hidden">Previous</span>';
+			echo '</button>';
+			echo '<button class="carousel-control-next" type="button" data-bs-target="#' . $id . '" data-bs-slide="next">';
+				echo '<span class="carousel-control-next-icon" aria-hidden="true"></span>';
+				echo '<span class="visually-hidden">Next</span>';
+			echo '</button>';
+		}
+
 		echo '</div>' . "\n";
 	}
 
@@ -1311,61 +1323,6 @@ function basic_banner($banner) {
 	echo do_shortcode('[banner]' . $banner . '[/banner]');
 }
 
-//     ▄██████▄    ▄██████▄ 
-//    ███    ███  ███    ███
-//    ███    █▀   ███    ███
-//   ▄███         ███    ███
-//  ▀▀███ ████▄   ███    ███
-//    ███    ███  ███    ███
-//    ███    ███  ███    ███
-//    ████████▀    ▀██████▀ 
-
-define('_BB', _bbSettings::get_settings());
-
-// actions
-
-add_action('init', 'bb_init');
-add_action('admin_head', 'bb_admin_styling');
-add_action('admin_enqueue_scripts', 'bb_admin_scripts');
-add_action('add_meta_boxes', 'bb_add_metaboxes');
-add_action('save_post', 'bb_save_postdata');
-add_action('banner_edit_form_fields','bb_banner_edit_form_fields', 10, 2);
-add_action('banner_add_form_fields','bb_banner_edit_form_fields', 10, 2);
-add_action('edited_banner', 'bb_banner_save_form_fields');
-add_action('created_banner', 'bb_banner_save_form_fields');
-add_action('restrict_manage_posts', 'bb_add_filter_to_slides_list');
-add_action('wp_ajax_update-custom-type-order', 'bb_save_ajax_order');
-add_action('wp_ajax_update-custom-type-order-archive', 'bb_save_archive_ajax_order');
-
-// filters
-
-if (is_admin()) {
-	add_filter('parent_file', 'bb_set_current_menu');
-	add_filter('parse_query', 'bb_slides_filter');
-	add_filter('get_previous_post_where', 'bb_get_previous_post_where', 99, 3);
-	add_filter('get_previous_post_sort', 'bb_get_previous_post_sort');
-	add_filter('get_next_post_where', 'bb_get_next_post_where', 99, 3);
-	add_filter('get_next_post_sort', 'bb_get_next_post_sort');
-}
-
-// shortcodes
-
-add_shortcode('banner', 'bb_shortcode');
-
-// boot plugin
-
-add_action('init', function() {
-	if (is_admin()) {
-		new _bbMenu(_URL_BASIC_BANNER);
-	}
-});
-
-add_action('rest_api_init', function() {
-	_bbSettings::args();
-	$api = new _bbAPI();
-	$api->add_routes();
-});
-
 //     ▄█    █▄        ▄████████   ▄█           ▄███████▄
 //    ███    ███      ███    ███  ███          ███    ███
 //    ███    ███      ███    █▀   ███          ███    ███
@@ -1428,5 +1385,238 @@ function bb_minify_js($input) {
 		],
 	$input);
 }
+
+//  ███    █▄      ▄███████▄  ████████▄      ▄████████      ███         ▄████████  
+//  ███    ███    ███    ███  ███   ▀███    ███    ███  ▀█████████▄    ███    ███  
+//  ███    ███    ███    ███  ███    ███    ███    ███     ▀███▀▀██    ███    █▀   
+//  ███    ███    ███    ███  ███    ███    ███    ███      ███   ▀   ▄███▄▄▄      
+//  ███    ███  ▀█████████▀   ███    ███  ▀███████████      ███      ▀▀███▀▀▀      
+//  ███    ███    ███         ███    ███    ███    ███      ███        ███    █▄   
+//  ███    ███    ███         ███   ▄███    ███    ███      ███        ███    ███  
+//  ████████▀    ▄████▀       ████████▀     ███    █▀      ▄████▀      ██████████
+
+if (!class_exists('WPU')) {
+	class WPU {
+		private $file;
+		private $plugin;
+		private $basename;
+		private $active;
+		private $username;
+		private $repository;
+		private $authorize_token;
+		private $github_response;
+
+		public $requires;
+		public $tested;
+
+		public function __construct($file) {
+			$this->file = $file;
+			add_action('admin_init', [$this, 'set_plugin_properties']);
+
+			return $this;
+		}
+
+		public function set_plugin_properties() {
+			$this->plugin = get_plugin_data($this->file);
+			$this->basename = plugin_basename($this->file);
+			$this->active = is_plugin_active($this->basename);
+		}
+
+		public function set_username($username) {
+			$this->username = $username;
+		}
+
+		public function set_repository($repository) {
+			$this->repository = $repository;
+		}
+
+		public function authorize($token) {
+			$this->authorize_token = $token;
+		}
+
+		private function get_repository_info() {
+			if (is_null($this->github_response)) {
+				$request_uri = sprintf('https://api.github.com/repos/%s/%s/releases', $this->username, $this->repository);
+
+				$curl = curl_init();
+
+				curl_setopt_array($curl, [
+					CURLOPT_URL => $request_uri,
+					CURLOPT_RETURNTRANSFER => true,
+					CURLOPT_ENCODING => '',
+					CURLOPT_MAXREDIRS => 10,
+					CURLOPT_TIMEOUT => 0,
+					CURLOPT_FOLLOWLOCATION => true,
+					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+					CURLOPT_CUSTOMREQUEST => 'GET',
+					CURLOPT_HTTPHEADER => [
+						'Authorization: token ' . $this->authorize_token,
+						'User-Agent: WPUpdater/1.0.0'
+					]
+				]);
+
+				$response = curl_exec($curl);
+
+				curl_close($curl);
+
+				$response = json_decode($response, true);
+
+				if (is_array($response)) {
+					$response = current($response);
+				}
+
+				$this->github_response = $response;
+			}
+		}
+
+		public function initialize() {
+			add_filter('pre_set_site_transient_update_plugins', [$this, 'modify_transient'], 10, 1);
+			add_filter('plugins_api', [$this, 'plugin_popup'], 10, 3);
+			add_filter('upgrader_post_install', [$this, 'after_install'], 10, 3);
+		}
+
+		public function modify_transient($transient) {
+			if (property_exists($transient, 'checked')) {
+				if ($checked = $transient->checked) {
+					$this->get_repository_info();
+
+					$out_of_date = version_compare($this->github_response['tag_name'], $checked[$this->basename], 'gt');
+
+					if ($out_of_date) {
+						$new_files = $this->github_response['zipball_url'];
+						$slug = current(explode('/', $this->basename));
+
+						$plugin = [
+							'url' => $this->plugin['PluginURI'],
+							'slug' => $slug,
+							'package' => $new_files,
+							'new_version' => $this->github_response['tag_name']
+						];
+
+						$transient->response[$this->basename] = (object) $plugin;
+					}
+				}
+			}
+
+			return $transient;
+		}
+
+		public function plugin_popup($result, $action, $args) {
+			if ($action !== 'plugin_information') {
+				return false;
+			}
+
+			if (!empty($args->slug)) {
+				if ($args->slug == current(explode('/' , $this->basename))) {
+					$this->get_repository_info();
+
+					$plugin = [
+						'name' => $this->plugin['Name'],
+						'slug' => $this->basename,
+						'requires' => $this->$requires ?? '6.3',
+						'tested' => $this->$tested ?? '6.4.3',
+						'version' => $this->github_response['tag_name'],
+						'author' => $this->plugin['AuthorName'],
+						'author_profile' => $this->plugin['AuthorURI'],
+						'last_updated' => $this->github_response['published_at'],
+						'homepage' => $this->plugin['PluginURI'],
+						'short_description' => $this->plugin['Description'],
+						'sections' => [
+							'Description' => $this->plugin['Description'],
+							'Updates' => $this->github_response['body'],
+						],
+						'download_link' => $this->github_response['zipball_url']
+					];
+
+					return (object) $plugin;
+				}
+			}
+
+
+			return $result;
+		}
+
+		public function after_install($response, $hook_extra, $result) {
+			global $wp_filesystem;
+
+			$install_directory = plugin_dir_path($this->file);
+			$wp_filesystem->move($result['destination'], $install_directory);
+			$result['destination'] = $install_directory;
+
+			if ($this->active) {
+				activate_plugin($this->basename);
+			}
+
+			return $result;
+		}
+	}
+}
+
+//   ▄█   ███▄▄▄▄▄     ▄█       ███      
+//  ███   ███▀▀▀▀██▄  ███   ▀█████████▄  
+//  ███▌  ███    ███  ███▌     ▀███▀▀██  
+//  ███▌  ███    ███  ███▌      ███   ▀  
+//  ███▌  ███    ███  ███▌      ███      
+//  ███   ███    ███  ███       ███      
+//  ███   ███    ███  ███       ███      
+//  █▀     ▀█    █▀   █▀       ▄████▀
+
+define('_BB', _bbSettings::get_settings());
+
+// init updater
+
+if (get_option('auth_key') !== '') {
+	$updater = new WPU(__FILE__);
+	$updater->$requires = '6.4';
+	$updater->$tested = '6.4.3';
+	$updater->set_username('nullstep');
+	$updater->set_repository('basic_banner');
+	$updater->authorize(get_option('auth_key'));
+	$updater->initialize();
+}
+
+// actions
+
+add_action('init', 'bb_init');
+add_action('admin_head', 'bb_admin_styling');
+add_action('admin_enqueue_scripts', 'bb_admin_scripts');
+add_action('add_meta_boxes', 'bb_add_metaboxes');
+add_action('save_post', 'bb_save_postdata');
+add_action('banner_edit_form_fields','bb_banner_edit_form_fields', 10, 2);
+add_action('banner_add_form_fields','bb_banner_edit_form_fields', 10, 2);
+add_action('edited_banner', 'bb_banner_save_form_fields');
+add_action('created_banner', 'bb_banner_save_form_fields');
+add_action('restrict_manage_posts', 'bb_add_filter_to_slides_list');
+add_action('wp_ajax_update-custom-type-order', 'bb_save_ajax_order');
+add_action('wp_ajax_update-custom-type-order-archive', 'bb_save_archive_ajax_order');
+
+// filters
+
+if (is_admin()) {
+	add_filter('parent_file', 'bb_set_current_menu');
+	add_filter('parse_query', 'bb_slides_filter');
+	add_filter('get_previous_post_where', 'bb_get_previous_post_where', 99, 3);
+	add_filter('get_previous_post_sort', 'bb_get_previous_post_sort');
+	add_filter('get_next_post_where', 'bb_get_next_post_where', 99, 3);
+	add_filter('get_next_post_sort', 'bb_get_next_post_sort');
+}
+
+// shortcodes
+
+add_shortcode('banner', 'bb_shortcode');
+
+// boot plugin
+
+add_action('init', function() {
+	if (is_admin()) {
+		new _bbMenu(_URL_BASIC_BANNER);
+	}
+});
+
+add_action('rest_api_init', function() {
+	_bbSettings::args();
+	$api = new _bbAPI();
+	$api->add_routes();
+});
 
 // eof
