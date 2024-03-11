@@ -6,7 +6,7 @@
  * Description: A simple banner/slider
  * Author: nullstep
  * Author URI: https://nullstep.com
- * Version: 1.2.1
+ * Version: 1.2.2
  */
 
 defined('ABSPATH') or die('⎺\_(ツ)_/⎺');
@@ -645,8 +645,8 @@ function bb_slide_metabox($post) {
 			<span class="desc">Top position for the text on this slide</span>
 		</div>
 		<div class="middle">
-			<label>Text:</label>
-			<input type="text" id="bb-slide-text" name="_bb-slide_text" value="<?php echo $text; ?>">
+			<label>Content:</label>
+			<textarea id="bb-slide-text" name="_bb-slide_text" style="height:60px"><?php echo $text; ?></textarea>
 			<span class="desc">Text for this slide</span>
 		</div>
 		<div class="middle">
@@ -717,6 +717,16 @@ function bb_save_postdata($post_id) {
 		}
 	}
 }
+
+function bb_add_buttons_to_post_edit() {
+		global $post;
+
+		$type = $post->post_type;
+
+		if (in_array($type, ['slide'])) {
+			echo '<br><a class="button button-primary" href="/wp-admin/edit.php?post_type=' . $type . '">Back to ' . ucwords(bb_plural(str_replace('_', ' ', $type))) . ' List&hellip;</a><br><br>';
+		}
+	}
 
 function bb_banner_save_form_fields($term_id) {
 	$metas = [
@@ -879,7 +889,6 @@ function bb_add_filter_to_slides_list() {
 		}
 
 		echo '</select>';
-		echo '<style>.ui-sortable-handle{cursor:move}</style>';
 	}
 }
 
@@ -966,7 +975,6 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 	$items = [];
 
 	if ($name) {
-		wp_reset_query();
 		$banner = new WP_Query([
 			'post_type' => 'slide',
 			'tax_query' => [[
@@ -1002,66 +1010,69 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 	$accent = get_term_meta($term->term_id, 'accent', true);
 
 	$num_items = count($items);
+	$html = '';
 
 	if ($num_items > 0) {
 		ob_start();
 
-		echo str_repeat("\t", _BB['bb_indent']) . '<style>' . _BB['bb_css_minified'] . '</style>' . "\n";
-		echo str_repeat("\t", _BB['bb_indent']) . '<script>' . _BB['bb_js_minified'] . '</script>' . "\n";
+		$html .= str_repeat("\t", _BB['bb_indent']) . '<style>' . _BB['bb_css_minified'] . '</style>' . "\n";
+		$html .= str_repeat("\t", _BB['bb_indent']) . '<script>' . _BB['bb_js_minified'] . '</script>' . "\n";
 
 		$id = 'bb-carousel_' . $name;
 		$class = ($crossfade == 'yes') ? ' carousel-fade' : '';
 		$class .= ($mode == 'dark') ? ' carousel-dark' : '';
 		$style = ($accent == 'yes') ? ';border-bottom:5px solid transparent"' : '';
 
-		echo str_repeat("\t", _BB['bb_indent']) . '<div id="' . $id . '" class="carousel slide' . $class . '" data-bs-ride="carousel" style="overflow:hidden;max-height:' . $height . $style . '">';
+		$html .= str_repeat("\t", _BB['bb_indent']) . '<div id="' . $id . '" class="carousel slide' . $class . '" data-bs-ride="carousel" style="overflow:hidden;max-height:' . $height . $style . '">';
 
 		if (($indicators == 'yes') && ($num_items > 1)) {
-			echo '<div class="carousel-indicators">';
+			$html .= '<div class="carousel-indicators">';
 
 			for ($i = 0; $i < count($items); $i++) {
 				$class = ($i == 0) ? 'active' : '';
-				echo '<button type="button" data-bs-target="#' . $id . '" data-bs-slide-to="' . $i . '" class="' . $class . '" aria-current="true" aria-label="Slide ' . ($i + 1) . '"></button>';
+				$html .= '<button type="button" data-bs-target="#' . $id . '" data-bs-slide-to="' . $i . '" class="' . $class . '" aria-current="true" aria-label="Slide ' . ($i + 1) . '"></button>';
 			}
 
-			echo '</div>';			
+			$html .= '</div>';			
 		}
 
-		echo '<div class="carousel-inner">';
+		$html .= '<div class="carousel-inner">';
 
 		for ($i = 0; $i < count($items); $i++) {
 			$class = ($i == 0) ? ' active' : '';
-			echo '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
-				echo '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
-				echo '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
-					echo '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
-					echo '<p class="banner-text">' . $items[$i]['text'] . '</p>';
+			$html .= '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
+				$html .= '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
+				$html .= '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
+					$html .= '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
+					$html .= '<p class="banner-text">' . $items[$i]['text'] . '</p>';
 
 					if ($items[$i]['button']) {
-						echo '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
+						$html .= '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
 					}
 
-				echo '</div>';
-			echo '</div>';
+				$html .= '</div>';
+			$html .= '</div>';
 		}
 
-		echo '</div>';
+		$html .= '</div>';
 
 		if ($num_items > 1) {
-			echo '<button class="carousel-control-prev" type="button" data-bs-target="#' . $id . '" data-bs-slide="prev">';
-				echo '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
-				echo '<span class="visually-hidden">Previous</span>';
-			echo '</button>';
-			echo '<button class="carousel-control-next" type="button" data-bs-target="#' . $id . '" data-bs-slide="next">';
-				echo '<span class="carousel-control-next-icon" aria-hidden="true"></span>';
-				echo '<span class="visually-hidden">Next</span>';
-			echo '</button>';
+			$html .= '<button class="carousel-control-prev" type="button" data-bs-target="#' . $id . '" data-bs-slide="prev">';
+				$html .= '<span class="carousel-control-prev-icon" aria-hidden="true"></span>';
+				$html .= '<span class="visually-hidden">Previous</span>';
+			$html .= '</button>';
+			$html .= '<button class="carousel-control-next" type="button" data-bs-target="#' . $id . '" data-bs-slide="next">';
+				$html .= '<span class="carousel-control-next-icon" aria-hidden="true"></span>';
+				$html .= '<span class="visually-hidden">Next</span>';
+			$html .= '</button>';
 		}
 
-		echo '</div>' . "\n";
+		$html .= '</div>' . "\n";
 	}
 
-	return ob_get_clean();
+	wp_reset_query();
+
+	return $html;
 }
 
 //     ▄████████   ▄██████▄      ▄████████      ███   
@@ -1310,9 +1321,10 @@ function bb_save_archive_ajax_order() {
 // some admin styling
 
 function bb_admin_styling() {
-	if (get_current_screen()->id == 'edit-banner') {
+	if (in_array(get_current_screen()->id, ['edit-banner', 'edit-slide'])) {
 		echo '<style>';
-			echo '.term-slug-wrap, .term-parent-wrap, .term-description-wrap { display: none; }';
+			echo '.term-slug-wrap, .term-parent-wrap, .term-description-wrap { display: none }';
+			echo '.ui-sortable-handle { background: transparent url("data:image/svg+xml;base64,' . base64_encode('<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 50 50"><path fill="#a3a6a7" d="M 0 7.5 L 0 12.5 L 50 12.5 L 50 7.5 Z M 0 22.5 L 0 27.5 L 50 27.5 L 50 22.5 Z M 0 37.5 L 0 42.5 L 50 42.5 L 50 37.5 Z"/></svg>') . '") no-repeat 9px 35px; }';
 		echo '</style>';
 	}
 }
@@ -1384,6 +1396,24 @@ function bb_minify_js($input) {
 			'$1.$3'
 		],
 	$input);
+}
+
+function bb_plural($string) {
+	switch (substr($string, -1)) {
+		case 'y': {
+			$plural = rtrim($string, 'y') . 'ies';
+			break;
+		}
+		case 'h': {
+			$plural = $string . 'es';
+			break;
+		}
+		default: {
+			$plural = $string . 's';
+		}
+	}
+
+	return $plural;
 }
 
 //  ███    █▄      ▄███████▄  ████████▄      ▄████████      ███         ▄████████  
@@ -1582,6 +1612,7 @@ add_action('admin_head', 'bb_admin_styling');
 add_action('admin_enqueue_scripts', 'bb_admin_scripts');
 add_action('add_meta_boxes', 'bb_add_metaboxes');
 add_action('save_post', 'bb_save_postdata');
+add_action('edit_form_top','bb_add_buttons_to_post_edit');
 add_action('banner_edit_form_fields','bb_banner_edit_form_fields', 10, 2);
 add_action('banner_add_form_fields','bb_banner_edit_form_fields', 10, 2);
 add_action('edited_banner', 'bb_banner_save_form_fields');
