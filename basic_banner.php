@@ -247,7 +247,7 @@ class _bbMenu {
 			$this->slug,
 			[$this, 'render_admin'],
 			'data:image/svg+xml;base64,' . base64_encode(
-				'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500px" height="500px" viewbox="0 0 500 500"><path fill="#a7aaad" d="M250,9.8L42,129.9v240.2l208,120.1l208-120.1V129.9L250,9.8z M381.5,140v35.5V228v44v52.5V360v8.5h-263V360 v-35.5V272v-44v-52.5V140v-8.5h263V140z"/></svg>'
+				'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="500px" height="500px" viewbox="0 0 500 500"><g><rect x="177.2" y="203.2" fill="#a7aaad" width="145.9" height="23.2"/><path fill="#a7aaad" d="M250.2,17.4L49,133.5v232.3L250.2,482l201.2-116.2V133.5L250.2,17.4z M371.9,203.2h-0.1v23.2v48.7v23.2V347 h-48.7H177.2h-48.7h-0.1v-48.7h0.1v-23.2h-0.1v-48.7h0.1v-23.2v-48.7h48.7h145.9h48.7h0.1V203.2z"/><rect x="177.2" y="275.1" fill="#a7aaad" width="145.9" height="23.2"/></g></svg>'
 			),
 			3
 		);
@@ -1598,17 +1598,6 @@ if (!class_exists('WPU')) {
 
 define('_BB', _bbSettings::get_settings());
 
-// init updater
-
-if (get_option('auth_key') !== '') {
-	$updater = new WPU(__FILE__);
-	$updater->set_versions('6.4', '6.4.3');
-	$updater->set_username('nullstep');
-	$updater->set_repository('basic_banner');
-	$updater->authorize(get_option('auth_key'));
-	$updater->initialize();
-}
-
 // actions
 
 add_action('init', 'bb_init');
@@ -1645,6 +1634,17 @@ add_shortcode('banner', 'bb_shortcode');
 add_action('init', function() {
 	if (is_admin()) {
 		new _bbMenu(_URL_BASIC_BANNER);
+
+		// init updater
+
+		if (get_option('auth_key') !== '') {
+			$updater = new WPU(__FILE__);
+			$updater->set_versions('6.4', '6.4.3');
+			$updater->set_username('nullstep');
+			$updater->set_repository('basic_banner');
+			$updater->authorize(get_option('auth_key'));
+			$updater->initialize();
+		}
 	}
 });
 
