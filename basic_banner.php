@@ -1324,7 +1324,7 @@ function bb_admin_styling() {
 	if (in_array(get_current_screen()->id, ['edit-banner', 'edit-slide'])) {
 		echo '<style>';
 			echo '.term-slug-wrap, .term-parent-wrap, .term-description-wrap { display: none }';
-			echo '.ui-sortable-handle { background: transparent url("data:image/svg+xml;base64,' . base64_encode('<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 50 50"><path fill="#a3a6a7" d="M 0 7.5 L 0 12.5 L 50 12.5 L 50 7.5 Z M 0 22.5 L 0 27.5 L 50 27.5 L 50 22.5 Z M 0 37.5 L 0 42.5 L 50 42.5 L 50 37.5 Z"/></svg>') . '") no-repeat 9px 35px; }';
+			echo '.ui-sortable-handle { background: transparent url("data:image/svg+xml;base64,' . base64_encode('<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 50 50"><path fill="#a3a6a7" d="M 0 7.5 L 0 12.5 L 50 12.5 L 50 7.5 Z M 0 22.5 L 0 27.5 L 50 27.5 L 50 22.5 Z M 0 37.5 L 0 42.5 L 50 42.5 L 50 37.5 Z"/></svg>') . '") no-repeat 12px 35px; }';
 		echo '</style>';
 	}
 }
