@@ -1408,6 +1408,10 @@ function bb_plural($string) {
 			$plural = $string . 'es';
 			break;
 		}
+		case 's': {
+			$plural = $string . 'es';
+			break;
+		}
 		default: {
 			$plural = $string . 's';
 		}
