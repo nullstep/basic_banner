@@ -6,7 +6,7 @@
  * Description: a simple banner/slider
  * Author: nullstep
  * Author URI: https://nullstep.com
- * Version: 1.2.3
+ * Version: 1.2.5
  */
 
 defined('ABSPATH') or die('⎺\_(ツ)_/⎺');
