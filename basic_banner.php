@@ -6,7 +6,7 @@
  * Description: a simple banner/slider
  * Author: nullstep
  * Author URI: https://nullstep.com
- * Version: 1.2.5
+ * Version: 1.2.6
  */
 
 defined('ABSPATH') or die('⎺\_(ツ)_/⎺');
@@ -735,7 +735,8 @@ function bb_banner_save_form_fields($term_id) {
 		'mode',
 		'crossfade',
 		'indicators',
-		'accent'
+		'accent',
+		'cards'
 	];
 
 	foreach ($metas as $meta_name) {
@@ -743,14 +744,44 @@ function bb_banner_save_form_fields($term_id) {
 			$meta_value = $_POST[$meta_name];
 			update_term_meta(
 				$term_id,
-      			$meta_name,
+				$meta_name,
 				sanitize_text_field($meta_value)
 			);
 		}
 	}
 }
 
+// add 'new' button to banner list page
+
+function bb_pre_banner_edit_form_fields($taxonomy) {
+	$screen = get_current_screen();
+	$action = $_GET['action'] ?? 'list';
+
+	if ($screen->base == 'edit-tags' && $action != 'new') {
+		if ($taxonomy && $taxonomy == 'banner') {
+			$button = " <a class='page-title-action' href='/wp-admin/edit-tags.php?taxonomy=banner&action=new'>Add New</a>";
+			echo '<script>jQuery(function($){$("h1.wp-heading-inline").after("' . $button . '");});</script>';
+		}
+	}
+}
+
 function bb_banner_edit_form_fields($term) {
+	global $pagenow;
+
+	switch ($pagenow) {
+		case 'edit-tags.php': {
+			$action = $_GET['action'] ?? 'list';
+			break;
+		}
+		case 'term.php': {
+			$action = 'edit';
+			break;
+		}
+		default: {
+			$action = 'list';
+		}
+	}
+
 	if (is_string($term)) {
 		$height = '400px';
 		$interval = '5000';
@@ -758,6 +789,12 @@ function bb_banner_edit_form_fields($term) {
 		$crossfade = 'no';
 		$indicators = 'yes';
 		$accent = 'yes';
+		$cards = 1;
+
+		$a = ($action == 'new') ? 'right' : 'left';
+		$b = ($action == 'new') ? 'left' : 'right';
+
+		echo '<style>#col-' . $a . '{display:none}#col-' . $b . '{width:100%}#titlediv #tag-name{padding:3px 8px;font-size:1.7em;line-height:100%;height:1.7em;width:100%;outline: 0;margin:0 0 3px;background-color:#fff}</style>';
 	}
 	else {
 		$height = get_term_meta($term->term_id, 'height', true);
@@ -766,6 +803,9 @@ function bb_banner_edit_form_fields($term) {
 		$crossfade = get_term_meta($term->term_id, 'crossfade', true);
 		$indicators = get_term_meta($term->term_id, 'indicators', true);
 		$accent = get_term_meta($term->term_id, 'accent', true);
+		$cards = (int) get_term_meta($term->term_id, 'cards', true);
+
+		echo '<style>#edittag{max-width:100%}#titlediv #name{padding:3px 8px;font-size:1.7em;line-height:100%;height:1.7em;width:100%;outline: 0;margin:0 0 3px;background-color:#fff}</style>';
 	}
 ?>
 	<tr class="form-field">
@@ -843,6 +883,22 @@ function bb_banner_edit_form_fields($term) {
 				foreach ($options as $o) {
 					$selected = ($o == $accent) ? ' selected' : '';
 					echo '<option value="' . $o . '"' . $selected . '>' . ucwords($o) . '</option>';
+				}
+			?>
+			</select>
+		</td>
+	</tr>
+	<tr class="form-field">
+		<th valign="top" scope="row">
+			<label for="cards">Number of Cards</label>
+		</th>
+		<td>
+			<select id="cards" name="cards">
+			<?php
+				$options = [1, 2, 3, 4];
+				foreach ($options as $o) {
+					$selected = ($o == $cards) ? ' selected' : '';
+					echo '<option value="' . $o . '"' . $selected . '>' . $o . '</option>';
 				}
 			?>
 			</select>
@@ -1008,6 +1064,7 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 	$crossfade = get_term_meta($term->term_id, 'crossfade', true);
 	$indicators = get_term_meta($term->term_id, 'indicators', true);
 	$accent = get_term_meta($term->term_id, 'accent', true);
+	$cards = get_term_meta($term->term_id, 'cards', true);
 
 	$num_items = count($items);
 	$html = '';
@@ -1038,20 +1095,57 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 
 		$html .= '<div class="carousel-inner">';
 
-		for ($i = 0; $i < count($items); $i++) {
-			$class = ($i == 0) ? ' active' : '';
-			$html .= '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
-				$html .= '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
-				$html .= '<div class="carousel-caption d-none d-md-block" style="text-align:' . $items[$i]['align'] . ' !important;bottom:unset !important;top:' . $items[$i]['top'] . ' !important">';
-					$html .= '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
-					$html .= '<p class="banner-text">' . $items[$i]['text'] . '</p>';
+		if ($cards == 1) {
+			for ($i = 0; $i < count($items); $i++) {
+				$class = ($i == 0) ? ' active' : '';
+				$html .= '<div class="carousel-item' . $class . '"  data-bs-interval="' . $interval . '">';
+					$html .= '<img src="' . $items[$i]['image'] . '" class="d-block img-fluid" alt="...">';
+					$align = ($items[$i]['align'] != '') ? 'text-align:' . $items[$i]['align'] . ' !important;' : '';
+					$top = ($items[$i]['top'] != '') ? 'top:' . $items[$i]['top'] . ' xxx!important;' : '';
 
-					if ($items[$i]['button']) {
-						$html .= '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
-					}
+					$html .= '<div class="carousel-caption d-none d-md-block" style="' . $align . 'bottom:unset !important;' . $top . '">';
+						$html .= '<h2 class="banner-title">' . str_replace('|', '<br>', $items[$i]['title']) . '</h2>';
+						$html .= '<p class="banner-text">' . $items[$i]['text'] . '</p>';
+
+						if ($items[$i]['button']) {
+							$html .= '<a class="banner-url" href="' . $items[$i]['url'] . '"><button class="banner-button">' . $items[$i]['button'] . '</button></a>';
+						}
+
+					$html .= '</div>';
+				$html .= '</div>';
+			}
+		}
+		else {
+			switch ($cards) {
+				case 4: {
+					$col = 3;
+					break;
+				}
+				case 3: {
+					$col = 4;
+					break;
+				}
+				case 2: {
+					$col = 6;
+					break;
+				}
+			}
+
+			for ($i = 0; $i < count($items); $i++) {
+				$class = ($i == 0) ? ' active' : '';
+				$html .= '<div class="carousel-item' . $class . '" data-bs-interval="' . $interval . '">';
+
+					$html .= '<div class="col-md-' . $col . '">';
+						$html .= '<div class="card">';
+							$html .= '<div class="card-img">';
+								$html .= '<img src="' . $items[$i]['image'] . '" class="img-fluid">';
+							$html .= '</div>';
+							$html .= '<div class="card-img-overlay"></div>';
+						$html .= '</div>';
+					$html .= '</div>';
 
 				$html .= '</div>';
-			$html .= '</div>';
+			}			
 		}
 
 		$html .= '</div>';
@@ -1068,6 +1162,12 @@ function bb_shortcode($atts = [], $content = null, $tag = '') {
 		}
 
 		$html .= '</div>' . "\n";
+
+		if ($cards > 1) {
+			$html .= '<script>let items = document.querySelectorAll(".carousel .carousel-item");items.forEach((el) => {const minPerSlide = 4;let next = el.nextElementSibling;for (var i=1; i<minPerSlide; i++) {if (!next) {next = items[0];}let cloneChild = next.cloneNode(true);el.appendChild(cloneChild.children[0]);next = next.nextElementSibling;}});</script>';
+			$html .= '<style>@media (max-width: 767px) {.carousel-inner .carousel-item > div {display: none;}.carousel-inner .carousel-item > div:first-child {
+			display: block;}}.carousel-inner .carousel-item.active, .carousel-inner .carousel-item-next, .carousel-inner .carousel-item-prev {display: flex;} @media (min-width: 768px) {.carousel-inner .carousel-item-end.active, .carousel-inner .carousel-item-next {transform: translateX(25%);}.carousel-inner .carousel-item-start.active, .carousel-inner .carousel-item-prev {transform: translateX(-25%);}}.carousel-inner .carousel-item-end,.carousel-inner .carousel-item-start {transform: translateX(0);}.carousel-item .card{border-radius:0;border:0;}</style>';
+		}
 	}
 
 	wp_reset_query();
@@ -1420,176 +1520,6 @@ function bb_plural($string) {
 	return $plural;
 }
 
-//  ███    █▄      ▄███████▄  ████████▄      ▄████████      ███         ▄████████  
-//  ███    ███    ███    ███  ███   ▀███    ███    ███  ▀█████████▄    ███    ███  
-//  ███    ███    ███    ███  ███    ███    ███    ███     ▀███▀▀██    ███    █▀   
-//  ███    ███    ███    ███  ███    ███    ███    ███      ███   ▀   ▄███▄▄▄      
-//  ███    ███  ▀█████████▀   ███    ███  ▀███████████      ███      ▀▀███▀▀▀      
-//  ███    ███    ███         ███    ███    ███    ███      ███        ███    █▄   
-//  ███    ███    ███         ███   ▄███    ███    ███      ███        ███    ███  
-//  ████████▀    ▄████▀       ████████▀     ███    █▀      ▄████▀      ██████████
-
-if (!class_exists('WPU')) {
-	class WPU {
-		private $file;
-		private $plugin;
-		private $basename;
-		private $active;
-		private $username;
-		private $repository;
-		private $authorize_token;
-		private $github_response;
-
-		private $requires;
-		private $tested;
-
-		public function __construct($file) {
-			$this->file = $file;
-			add_action('admin_init', [$this, 'set_plugin_properties']);
-
-			return $this;
-		}
-
-		public function set_plugin_properties() {
-			$this->plugin = get_plugin_data($this->file);
-			$this->basename = plugin_basename($this->file);
-			$this->active = is_plugin_active($this->basename);
-		}
-
-		public function set_versions($requires, $tested) {
-			$this->requires = $requires;
-			$this->tested = $tested;
-		}
-
-		public function set_username($username) {
-			$this->username = $username;
-		}
-
-		public function set_repository($repository) {
-			$this->repository = $repository;
-		}
-
-		public function authorize($token) {
-			$this->authorize_token = $token;
-		}
-
-		private function get_repository_info() {
-			if (is_null($this->github_response)) {
-				$request_uri = sprintf('https://api.github.com/repos/%s/%s/releases', $this->username, $this->repository);
-
-				$curl = curl_init();
-
-				curl_setopt_array($curl, [
-					CURLOPT_URL => $request_uri,
-					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_ENCODING => '',
-					CURLOPT_MAXREDIRS => 10,
-					CURLOPT_TIMEOUT => 0,
-					CURLOPT_FOLLOWLOCATION => true,
-					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					CURLOPT_CUSTOMREQUEST => 'GET',
-					CURLOPT_HTTPHEADER => [
-						'Authorization: token ' . $this->authorize_token,
-						'User-Agent: WPUpdater/1.0.0'
-					]
-				]);
-
-				$response = curl_exec($curl);
-
-				curl_close($curl);
-
-				$response = json_decode($response, true);
-
-				if (is_array($response)) {
-					$response = current($response);
-				}
-
-				$this->github_response = $response;
-			}
-		}
-
-		public function initialize() {
-			add_filter('pre_set_site_transient_update_plugins', [$this, 'modify_transient'], 10, 1);
-			add_filter('plugins_api', [$this, 'plugin_popup'], 10, 3);
-			add_filter('upgrader_post_install', [$this, 'after_install'], 10, 3);
-		}
-
-		public function modify_transient($transient) {
-			if (property_exists($transient, 'checked')) {
-				if ($checked = $transient->checked) {
-					$this->get_repository_info();
-
-					$out_of_date = version_compare($this->github_response['tag_name'], $checked[$this->basename], 'gt');
-
-					if ($out_of_date) {
-						$new_files = $this->github_response['zipball_url'];
-						$slug = current(explode('/', $this->basename));
-
-						$plugin = [
-							'url' => $this->plugin['PluginURI'],
-							'slug' => $slug,
-							'package' => $new_files,
-							'new_version' => $this->github_response['tag_name']
-						];
-
-						$transient->response[$this->basename] = (object) $plugin;
-					}
-				}
-			}
-
-			return $transient;
-		}
-
-		public function plugin_popup($result, $action, $args) {
-			if ($action !== 'plugin_information') {
-				return false;
-			}
-
-			if (!empty($args->slug)) {
-				if ($args->slug == current(explode('/' , $this->basename))) {
-					$this->get_repository_info();
-
-					$plugin = [
-						'name' => $this->plugin['Name'],
-						'slug' => $this->basename,
-						'requires' => $this->$requires ?? '6.3',
-						'tested' => $this->$tested ?? '6.4.3',
-						'version' => $this->github_response['tag_name'],
-						'author' => $this->plugin['AuthorName'],
-						'author_profile' => $this->plugin['AuthorURI'],
-						'last_updated' => $this->github_response['published_at'],
-						'homepage' => $this->plugin['PluginURI'],
-						'short_description' => $this->plugin['Description'],
-						'sections' => [
-							'Description' => $this->plugin['Description'],
-							'Updates' => $this->github_response['body'],
-						],
-						'download_link' => $this->github_response['zipball_url']
-					];
-
-					return (object) $plugin;
-				}
-			}
-
-
-			return $result;
-		}
-
-		public function after_install($response, $hook_extra, $result) {
-			global $wp_filesystem;
-
-			$install_directory = plugin_dir_path($this->file);
-			$wp_filesystem->move($result['destination'], $install_directory);
-			$result['destination'] = $install_directory;
-
-			if ($this->active) {
-				activate_plugin($this->basename);
-			}
-
-			return $result;
-		}
-	}
-}
 
 //   ▄█   ███▄▄▄▄▄     ▄█       ███      
 //  ███   ███▀▀▀▀██▄  ███   ▀█████████▄  
@@ -1610,6 +1540,7 @@ add_action('admin_enqueue_scripts', 'bb_admin_scripts');
 add_action('add_meta_boxes', 'bb_add_metaboxes');
 add_action('save_post', 'bb_save_postdata');
 add_action('edit_form_top','bb_add_buttons_to_post_edit');
+add_action('banner_pre_add_form','bb_pre_banner_edit_form_fields');
 add_action('banner_edit_form_fields','bb_banner_edit_form_fields', 10, 2);
 add_action('banner_add_form_fields','bb_banner_edit_form_fields', 10, 2);
 add_action('edited_banner', 'bb_banner_save_form_fields');
